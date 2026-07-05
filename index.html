@@ -63,15 +63,15 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.8), inset 0 2px 2px rgba(255,255,255,0.05);
             border: 1px solid #2f3a4a;
             display: flex;
-            flex-direction: column;
+            flex-direction: column; /* Changed to column */
             transition: all 0.2s;
-            overflow-y: auto;
+            overflow: hidden; /* Main dashboard handles its own overflow now through inner sections */
         }
 
         /* Scroll personalizado */
-        .dashboard::-webkit-scrollbar { width: 4px; }
-        .dashboard::-webkit-scrollbar-track { background: #141a24; }
-        .dashboard::-webkit-scrollbar-thumb { background: #2f3a4a; border-radius: 10px; }
+        .main-display-area::-webkit-scrollbar { width: 4px; }
+        .main-display-area::-webkit-scrollbar-track { background: #1a202b; border-radius: 10px; }
+        .main-display-area::-webkit-scrollbar-thumb { background: #2f3a4a; border-radius: 10px; }
 
         /* Barra de estado */
         .status-bar {
@@ -99,56 +99,166 @@
             gap: 4px;
         }
 
-        /* Layout principal en grid horizontal */
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 14px;
-            flex: 1;
-            min-height: 0;
+        /* Nuevo contenedor para el layout principal */
+        .content-wrapper {
+            display: flex;
+            flex: 1; /* Ocupa todo el espacio vertical disponible */
             margin-top: 10px;
+            gap: 14px; /* Espacio entre la barra lateral y el contenido principal */
+            min-height: 0; /* Important for flex children in columns */
         }
 
-        /* Columna izquierda */
-        .left-col {
+        /* Barra de control izquierda */
+        .left-control-bar {
+            width: 90px; /* Ancho fijo para la barra de control */
+            background: #1e2836;
+            border-radius: 20px;
+            padding: 12px 0px;
+            border: 1px solid #2d3b4e;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            min-height: 0;
+            align-items: center;
+            justify-content: space-around; /* Distribuye los botones verticalmente */
+            flex-shrink: 0; /* No se encogerá */
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.03);
         }
 
-        /* Grid de apps (más compacto en horizontal) */
-        .app-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px 8px;
-            flex-shrink: 0;
-        }
-        .app-item {
-            background: #1e2836;
-            border-radius: 16px;
+        .control-button {
+            background: transparent;
+            border-radius: 14px;
             padding: 10px 4px 8px;
             text-align: center;
             color: #d6e3f5;
             transition: all 0.15s ease;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
-            border: 1px solid #2c384a;
+            cursor: pointer;
+            touch-action: manipulation;
+            width: 100%; /* Ocupa todo el ancho de la barra */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .control-button:hover {
+            background: rgba(43, 56, 80, 0.2);
+        }
+        .control-button:active, .control-button.active {
+            transform: scale(0.95);
+            background: #2b3850;
+            color: white;
+            border: 1px solid #4d6a8f;
+        }
+        .control-button.active {
+            box-shadow: 0 0 10px rgba(77, 106, 143, 0.4);
+        }
+        .control-button i { font-size: 24px; display: block; color: #9bb9e6; }
+        .control-button span { font-size: 11px; font-weight: 500; display: block; letter-spacing: 0.2px; }
+        .control-button .fab.fa-spotify { color: #1ed760; }
+        .control-button .fas.fa-map-marked-alt { color: #fbbc04; }
+        /* .control-button .fas.fa-waze { color: #33ccff; } */ /* Removed specific Waze button */
+        /* .control-button .fas.fa-satellite-dish { color: #8ab4f8; } */ /* Removed specific GPS button */
+        .control-button .fas.fa-phone { color: #4caf50; } /* For new phone button */
+        .control-button .fas.fa-cog { color: #8ab4f8; } /* For settings button */
+        .control-button .fas.fa-home { color: #9bb9e6; } /* For home button */
+
+        /* Área principal para mostrar la acción actual */
+        .main-display-area {
+            flex: 1; /* Ocupa el espacio restante */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 0; /* Allow scrolling */
+            overflow-y: auto; /* Permite scroll vertical */
+            padding-right: 4px; /* Pequeño padding para el scrollbar */
+        }
+        /* Dashboard scroll moved to main-display-area */
+        .dashboard::-webkit-scrollbar { width: 0; } /* Hide dashboard scrollbar */
+
+
+        /* Reproductor */
+        .music-card {
+            background: #1e2836;
+            border-radius: 20px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid #2d3b4e;
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.03);
+            flex-shrink: 0;
+        }
+        .music-cover {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(145deg, #2b3d55, #141e2b);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #1ed760;
+            border: 1px solid #3f5570;
+            flex-shrink: 0;
+        }
+        .music-info { flex: 1; color: #e1edfa; min-width: 0; }
+        .music-info .title { font-weight: 600; font-size: 14px; letter-spacing: -0.2px; }
+        .music-info .artist { font-size: 12px; color: #99b0d0; margin-top: 2px; }
+        .music-controls { display: flex; gap: 14px; color: #b8cef0; font-size: 17px; }
+        .music-controls i { cursor: pointer; transition: 0.1s; touch-action: manipulation; }
+        .music-controls i:active { color: white; transform: scale(0.85); }
+
+        /* Navegación */
+        .nav-panel {
+            background: #161f2b;
+            border-radius: 20px;
+            padding: 12px 16px;
+            border: 1px solid #2f3e52;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            gap: 6px;
+        }
+        .nav-destino { display: flex; align-items: center; gap: 8px; color: #c7dbf5; font-size: 14px; }
+        .nav-destino i { font-size: 18px; color: #fbbc04; }
+        .nav-destino span { font-weight: 500; font-size: 14px; }
+        .nav-actions { display: flex; gap: 10px; color: #a4bedc; }
+        .nav-actions i {
+            font-size: 16px;
+            background: #202d3d;
+            padding: 6px;
+            border-radius: 25px;
+            border: 1px solid #3b4d66;
+            transition: 0.1s;
             cursor: pointer;
             touch-action: manipulation;
         }
-        .app-item:active {
-            transform: scale(0.92);
-            background: #2b3850;
-            border-color: #4d6a8f;
-        }
-        .app-item i { font-size: 24px; margin-bottom: 4px; display: block; color: #9bb9e6; }
-        .app-item span { font-size: 11px; font-weight: 500; display: block; letter-spacing: 0.2px; }
-        .app-item .fab.fa-spotify { color: #1ed760; }
-        .app-item .fas.fa-map-marked-alt { color: #fbbc04; }
-        .app-item .fas.fa-waze { color: #33ccff; }
-        .app-item .fas.fa-satellite-dish { color: #8ab4f8; }
+        .nav-actions i:active { background: #31445e; color: white; transform: scale(0.90); }
 
-        /* Panel de conexiones */
+        /* GPS */
+        .gps-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #0f1620;
+            border-radius: 30px;
+            padding: 8px 16px;
+            border: 1px solid #263340;
+            flex-shrink: 0;
+        }
+        .gps-row .gps-text { color: #b8d0f0; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+        .gps-row .gps-text i { color: #4caf50; }
+        .gps-row .gps-badge {
+            background: #1f324a;
+            padding: 3px 12px;
+            border-radius: 25px;
+            color: #aac3e5;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        /* Panel de conexiones (moved to main-display-area) */
         .connections-panel {
             background: #0e1722;
             border-radius: 20px;
@@ -239,112 +349,6 @@
             color: #7cf0b0;
         }
 
-        /* Columna derecha */
-        .right-col {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            min-height: 0;
-        }
-
-        /* Reproductor */
-        .music-card {
-            background: #1e2836;
-            border-radius: 20px;
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border: 1px solid #2d3b4e;
-            box-shadow: inset 0 1px 2px rgba(255,255,255,0.03);
-            flex-shrink: 0;
-        }
-        .music-cover {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(145deg, #2b3d55, #141e2b);
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            color: #1ed760;
-            border: 1px solid #3f5570;
-            flex-shrink: 0;
-        }
-        .music-info { flex: 1; color: #e1edfa; min-width: 0; }
-        .music-info .title { font-weight: 600; font-size: 14px; letter-spacing: -0.2px; }
-        .music-info .artist { font-size: 12px; color: #99b0d0; margin-top: 2px; }
-        .music-controls { display: flex; gap: 14px; color: #b8cef0; font-size: 17px; }
-        .music-controls i { cursor: pointer; transition: 0.1s; touch-action: manipulation; }
-        .music-controls i:active { color: white; transform: scale(0.85); }
-
-        /* Navegación */
-        .nav-panel {
-            background: #161f2b;
-            border-radius: 20px;
-            padding: 12px 16px;
-            border: 1px solid #2f3e52;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            flex-shrink: 0;
-            gap: 6px;
-        }
-        .nav-destino { display: flex; align-items: center; gap: 8px; color: #c7dbf5; font-size: 14px; }
-        .nav-destino i { font-size: 18px; color: #fbbc04; }
-        .nav-destino span { font-weight: 500; font-size: 14px; }
-        .nav-actions { display: flex; gap: 10px; color: #a4bedc; }
-        .nav-actions i {
-            font-size: 16px;
-            background: #202d3d;
-            padding: 6px;
-            border-radius: 25px;
-            border: 1px solid #3b4d66;
-            transition: 0.1s;
-            cursor: pointer;
-            touch-action: manipulation;
-        }
-        .nav-actions i:active { background: #31445e; color: white; transform: scale(0.90); }
-
-        /* GPS */
-        .gps-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #0f1620;
-            border-radius: 30px;
-            padding: 8px 16px;
-            border: 1px solid #263340;
-            flex-shrink: 0;
-        }
-        .gps-row .gps-text { color: #b8d0f0; font-size: 13px; display: flex; align-items: center; gap: 8px; }
-        .gps-row .gps-text i { color: #4caf50; }
-        .gps-row .gps-badge {
-            background: #1f324a;
-            padding: 3px 12px;
-            border-radius: 25px;
-            color: #aac3e5;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        /* Footer */
-        .footer-actions {
-            display: flex;
-            justify-content: space-around;
-            color: #7289a5;
-            font-size: 17px;
-            border-top: 1px solid #25303e;
-            padding-top: 12px;
-            flex-shrink: 0;
-            margin-top: 4px;
-        }
-        .footer-actions i { cursor: pointer; transition: 0.1s; padding: 4px 10px; border-radius: 25px; touch-action: manipulation; }
-        .footer-actions i:active { background: #253240; color: #d6e6ff; }
-
         .touch-hint {
             text-align: center;
             color: #4b6180;
@@ -357,10 +361,6 @@
 
         /* Responsive para pantallas más pequeñas en horizontal */
         @media (max-width: 700px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
             .dashboard {
                 max-height: none;
                 height: 100vh;
@@ -368,39 +368,60 @@
                 border-radius: 0;
                 padding: 12px 14px 16px;
             }
-            .app-grid {
-                grid-template-columns: repeat(4, 1fr);
+            .content-wrapper {
+                flex-direction: column; /* Apilar la barra lateral y el área principal */
+                gap: 10px;
             }
-            .app-item i { font-size: 22px; }
-            .app-item span { font-size: 10px; }
+            .left-control-bar {
+                width: 100%; /* La barra de control ocupa todo el ancho */
+                flex-direction: row; /* Los botones se organizan horizontalmente */
+                justify-content: space-around;
+                padding: 8px 0;
+                border-bottom: 1px solid #28303d;
+                border-right: none;
+                border-radius: 16px;
+                background: #1e2836;
+            }
+            .control-button {
+                padding: 8px 4px; /* Ajustar padding para botones más pequeños */
+            }
+            .control-button i { font-size: 20px; margin-bottom: 2px; }
+            .control-button span { font-size: 10px; }
+
+            .main-display-area {
+                padding-right: 0; /* No padding cuando no hay barra lateral */
+            }
         }
 
         @media (max-width: 500px) {
-            .app-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
-            .app-item { padding: 8px 4px 6px; }
-            .app-item i { font-size: 18px; }
-            .app-item span { font-size: 9px; }
+            .status-bar { font-size: 12px; padding-bottom: 8px; }
+            .status-bar i { margin-right: 3px; }
+            .battery { font-size: 11px; padding: 2px 8px 2px 5px; }
+            .control-button i { font-size: 18px; }
+            .control-button span { font-size: 9px; }
             .conn-item .conn-info { font-size: 11px; }
             .music-info .title { font-size: 12px; }
             .music-info .artist { font-size: 10px; }
             .nav-destino span { font-size: 12px; }
             .gps-row .gps-text { font-size: 11px; }
+            .connections-panel, .music-card, .nav-panel, .gps-row {
+                padding: 8px 12px;
+            }
         }
 
         @media (max-height: 450px) {
             .dashboard { padding: 8px 12px 12px; }
             .status-bar { padding-bottom: 6px; font-size: 11px; }
-            .app-grid { gap: 4px; }
-            .app-item { padding: 6px 4px 4px; }
-            .app-item i { font-size: 16px; margin-bottom: 2px; }
-            .app-item span { font-size: 8px; }
+            .left-control-bar { padding: 6px 0; }
+            .control-button { padding: 6px 4px; gap: 2px;}
+            .control-button i { font-size: 16px; }
+            .control-button span { font-size: 8px; }
             .connections-panel { padding: 6px 10px; }
             .conn-item { padding: 4px 8px; }
             .music-card { padding: 8px 12px; }
             .music-cover { width: 36px; height: 36px; font-size: 16px; }
             .nav-panel { padding: 8px 12px; }
             .gps-row { padding: 4px 12px; }
-            .footer-actions { padding-top: 6px; font-size: 14px; }
             .touch-hint { display: none; }
         }
     </style>
@@ -421,31 +442,76 @@
             </div>
         </div>
 
-        <!-- Grid principal: izquierda (apps + conexiones) y derecha (reproductor + navegación) -->
-        <div class="main-grid">
-            <!-- Columna izquierda -->
-            <div class="left-col">
-                <!-- Apps -->
-                <div class="app-grid">
-                    <div class="app-item" role="button" tabindex="0" aria-label="GPS Satelital">
-                        <i class="fas fa-satellite-dish"></i>
-                        <span>GPS</span>
-                    </div>
-                    <div class="app-item" role="button" tabindex="0" aria-label="Spotify música">
+        <!-- Contenedor principal: Barra de control izquierda y Área de visualización principal -->
+        <div class="content-wrapper">
+            <!-- Barra de control izquierda -->
+            <div class="left-control-bar">
+                <div class="control-button active" role="button" tabindex="0" aria-label="Inicio">
+                    <i class="fas fa-home"></i>
+                    <span>Inicio</span>
+                </div>
+                <div class="control-button" role="button" tabindex="0" aria-label="Spotify música">
+                    <i class="fab fa-spotify"></i>
+                    <span>Spotify</span>
+                </div>
+                <div class="control-button" role="button" tabindex="0" aria-label="Google Maps">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Maps</span>
+                </div>
+                <!-- Waze y GPS Satelital pueden lanzarse desde Maps o ser agregados si es necesario -->
+                <div class="control-button" role="button" tabindex="0" aria-label="Llamada">
+                    <i class="fas fa-phone"></i>
+                    <span>Teléfono</span>
+                </div>
+                <div class="control-button" role="button" tabindex="0" aria-label="Ajustes">
+                    <i class="fas fa-cog"></i>
+                    <span>Ajustes</span>
+                </div>
+            </div>
+
+            <!-- Área principal para mostrar la acción actual -->
+            <div class="main-display-area">
+                <!-- Reproductor -->
+                <div class="music-card">
+                    <div class="music-cover">
                         <i class="fab fa-spotify"></i>
-                        <span>Spotify</span>
                     </div>
-                    <div class="app-item" role="button" tabindex="0" aria-label="Google Maps">
-                        <i class="fas fa-map-marked-alt"></i>
-                        <span>Maps</span>
+                    <div class="music-info">
+                        <div class="title" id="songTitle">Bluetooth Stream</div>
+                        <div class="artist" id="songArtist">Desde el auto</div>
                     </div>
-                    <div class="app-item" role="button" tabindex="0" aria-label="Waze navegación">
-                        <i class="fas fa-waze"></i>
-                        <span>Waze</span>
+                    <div class="music-controls">
+                        <i class="fas fa-step-backward" aria-label="Anterior"></i>
+                        <i class="fas fa-play-circle" id="playPauseBtn" aria-label="Play/Pausa"></i>
+                        <i class="fas fa-step-forward" aria-label="Siguiente"></i>
                     </div>
                 </div>
 
-                <!-- Conexiones -->
+                <!-- Navegación -->
+                <div class="nav-panel">
+                    <div class="nav-destino">
+                        <i class="fas fa-location-dot"></i>
+                        <span id="navDestinoText">Home · 12 min</span>
+                    </div>
+                    <div class="nav-actions">
+                        <i class="fas fa-route" aria-label="Ruta"></i>
+                        <i class="fas fa-microphone" aria-label="Comando voz"></i>
+                        <i class="fas fa-ellipsis-vertical"></i>
+                    </div>
+                </div>
+
+                <!-- GPS -->
+                <div class="gps-row">
+                    <div class="gps-text">
+                        <i class="fas fa-crosshairs"></i>
+                        <span>GPS: <strong id="gpsCoords">19.4326° N, 99.1332° O</strong></span>
+                    </div>
+                    <div class="gps-badge" id="gpsBadge">
+                        <i class="fas fa-circle" style="color: #4caf50; font-size: 8px;"></i> <span id="satCount">14</span> sat
+                    </div>
+                </div>
+
+                <!-- Conexiones (movido a esta sección) -->
                 <div class="connections-panel">
                     <div class="connections-title">
                         <span><i class="fas fa-link"></i> Conexiones</span>
@@ -489,57 +555,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Columna derecha -->
-            <div class="right-col">
-                <!-- Reproductor -->
-                <div class="music-card">
-                    <div class="music-cover">
-                        <i class="fab fa-spotify"></i>
-                    </div>
-                    <div class="music-info">
-                        <div class="title" id="songTitle">Bluetooth Stream</div>
-                        <div class="artist" id="songArtist">Desde el auto</div>
-                    </div>
-                    <div class="music-controls">
-                        <i class="fas fa-step-backward" aria-label="Anterior"></i>
-                        <i class="fas fa-play-circle" id="playPauseBtn" aria-label="Play/Pausa"></i>
-                        <i class="fas fa-step-forward" aria-label="Siguiente"></i>
-                    </div>
-                </div>
-
-                <!-- Navegación -->
-                <div class="nav-panel">
-                    <div class="nav-destino">
-                        <i class="fas fa-location-dot"></i>
-                        <span id="navDestinoText">Home · 12 min</span>
-                    </div>
-                    <div class="nav-actions">
-                        <i class="fas fa-route" aria-label="Ruta"></i>
-                        <i class="fas fa-microphone" aria-label="Comando voz"></i>
-                        <i class="fas fa-ellipsis-vertical"></i>
-                    </div>
-                </div>
-
-                <!-- GPS -->
-                <div class="gps-row">
-                    <div class="gps-text">
-                        <i class="fas fa-crosshairs"></i>
-                        <span>GPS: <strong id="gpsCoords">19.4326° N, 99.1332° O</strong></span>
-                    </div>
-                    <div class="gps-badge" id="gpsBadge">
-                        <i class="fas fa-circle" style="color: #4caf50; font-size: 8px;"></i> <span id="satCount">14</span> sat
-                    </div>
-                </div>
-
-                <!-- Footer -->
-                <div class="footer-actions">
-                    <i class="fas fa-home" aria-label="Inicio"></i>
-                    <i class="fas fa-compass" aria-label="Brújula"></i>
-                    <i class="fas fa-cog" aria-label="Ajustes"></i>
-                    <i class="fas fa-phone" aria-label="Llamada"></i>
-                </div>
-            </div>
         </div>
 
         <div class="touch-hint">
@@ -549,34 +564,60 @@
 
     <script>
         (function() {
+            // DOM Elements (cached for performance)
             const internetBtn = document.getElementById('internetBtn');
             const audioBtn = document.getElementById('audioBtn');
             const connInternet = document.getElementById('connInternet');
             const connAudio = document.getElementById('connAudio');
             const playPauseBtn = document.getElementById('playPauseBtn');
-            const songTitle = document.getElementById('songTitle');
-            const songArtist = document.getElementById('songArtist');
+            const songTitleElement = document.getElementById('songTitle'); // Renamed to avoid clash
+            const songArtistElement = document.getElementById('songArtist'); // Renamed to avoid clash
             const navDestinoText = document.getElementById('navDestinoText');
-            const gpsCoords = document.getElementById('gpsCoords');
-            const satCount = document.getElementById('satCount');
+            const gpsCoordsElement = document.getElementById('gpsCoords'); // Renamed
+            const satCountElement = document.getElementById('satCount'); // Renamed
             const gpsBadge = document.getElementById('gpsBadge');
             const connCount = document.getElementById('connCount');
+            // Old footer and app-item references removed/repurposed
 
-            let internetConnected = navigator.onLine;
-            let audioConnected = false;
+            // Application State
+            const state = {
+                internetConnected: navigator.onLine,
+                audioPlaying: false, // Represents if actual audio is being generated
+                geolocationActive: false, // True if watchPosition is active and successfully updating
+                currentDestinationIndex: 0,
+                currentSong: {
+                    title: 'Bluetooth Stream',
+                    artist: 'Desde el auto'
+                },
+                gps: {
+                    latitude: 'N/A',
+                    longitude: 'N/A',
+                    satellites: '0',
+                    permissionDenied: false,
+                    notAvailable: false
+                }
+            };
+
+            // Constants
             let audioContext = null;
             let oscillator = null;
             let geolocationWatchId = null;
-            let currentDestinationIndex = 0;
             const destinos = ['Home · 12 min', 'Trabajo · 8 min', 'Gym · 5 min', 'Super · 4 min', 'Cine · 15 min', 'Mall · 9 min'];
+            const appTargets = {
+                'Spotify música': 'https://open.spotify.com',
+                'Google Maps': 'https://www.google.com/maps',
+                // 'Waze navegación': 'https://www.waze.com' // If Waze button were there
+            };
 
+            // Utility Functions
             function vibrate(duration = 8) {
                 if (navigator.vibrate) navigator.vibrate(duration);
             }
 
-            function updateUI() {
-                // Actualizar estado de Internet
-                if (internetConnected) {
+            // UI Rendering Function
+            function renderUI() {
+                // Internet Connection
+                if (state.internetConnected) {
                     connInternet.classList.add('internet-on');
                     connInternet.querySelector('.status-dot').className = 'status-dot online';
                     connInternet.querySelector('.conn-status span:last-child').textContent = 'En línea';
@@ -590,26 +631,8 @@
                     internetBtn.classList.remove('active');
                 }
 
-                // Actualizar contador de conexiones
-                const active = (internetConnected ? 1 : 0) + (audioConnected ? 1 : 0);
-                connCount.textContent = `${active} de 2`;
-
-                // Actualizar songArtist si el audio no está reproduciéndose
-                if (!audioConnected) {
-                    // Si el GPS está activo y proporcionando datos
-                    if (geolocationWatchId !== null && gpsCoords.textContent !== 'Permiso de GPS denegado' && gpsCoords.textContent !== 'Geolocalización no disponible') {
-                        songArtist.textContent = internetConnected ? 'GPS activo · ubicación real' : 'GPS activo · sin conexión';
-                    } else if (internetConnected) {
-                        songArtist.textContent = 'Desde el auto';
-                    } else {
-                        songArtist.textContent = 'Sin conexión real · audio detenido';
-                    }
-                }
-            }
-
-            function setAudioStatus(active) {
-                audioConnected = active;
-                if (active) {
+                // Audio Connection (music player state)
+                if (state.audioPlaying) {
                     connAudio.classList.add('audio-on');
                     connAudio.querySelector('.status-dot').className = 'status-dot streaming';
                     connAudio.querySelector('.conn-status span:last-child').textContent = 'Reproduciendo';
@@ -617,8 +640,8 @@
                     audioBtn.classList.add('active');
                     playPauseBtn.classList.remove('fa-play-circle');
                     playPauseBtn.classList.add('fa-pause-circle');
-                    songTitle.textContent = 'Bluetooth · ▶';
-                    songArtist.textContent = 'Audio real generado por el navegador';
+                    songTitleElement.textContent = 'Bluetooth · ▶';
+                    songArtistElement.textContent = 'Audio real generado por el navegador';
                 } else {
                     connAudio.classList.remove('audio-on');
                     connAudio.querySelector('.status-dot').className = 'status-dot offline';
@@ -627,19 +650,46 @@
                     audioBtn.classList.remove('active');
                     playPauseBtn.classList.remove('fa-pause-circle');
                     playPauseBtn.classList.add('fa-play-circle');
-                    songTitle.textContent = 'Bluetooth Stream';
-                    updateUI(); // Llamar a updateUI para que actualice songArtist según otros estados
+                    songTitleElement.textContent = state.currentSong.title; // Revert to default or last known
+                    // Dynamic songArtist based on other statuses when audio is not playing
+                    if (state.geolocationActive && !state.gps.permissionDenied && !state.gps.notAvailable) {
+                        songArtistElement.textContent = state.internetConnected ? 'GPS activo · ubicación real' : 'GPS activo · sin conexión';
+                    } else if (state.internetConnected) {
+                        songArtistElement.textContent = 'Desde el auto';
+                    } else {
+                        songArtistElement.textContent = 'Sin conexión real · audio detenido';
+                    }
+                }
+
+                // Connection Count
+                const activeConnections = (state.internetConnected ? 1 : 0) + (state.audioPlaying ? 1 : 0);
+                connCount.textContent = `${activeConnections} de 2`;
+
+                // Navigation Destination
+                navDestinoText.textContent = destinos[state.currentDestinationIndex];
+
+                // GPS Status
+                if (state.gps.permissionDenied) {
+                    gpsCoordsElement.textContent = 'Permiso de GPS denegado';
+                    satCountElement.textContent = '0';
+                } else if (state.gps.notAvailable) {
+                    gpsCoordsElement.textContent = 'Geolocalización no disponible';
+                    satCountElement.textContent = '0';
+                } else {
+                    gpsCoordsElement.textContent = `${state.gps.latitude}° N, ${state.gps.longitude}° O`;
+                    satCountElement.textContent = state.gps.satellites;
                 }
             }
 
+            // Core Logic Functions
             async function checkInternet() {
                 try {
                     await fetch('https://www.google.com', { method: 'HEAD', mode: 'no-cors' });
-                    internetConnected = true;
+                    state.internetConnected = true;
                 } catch (error) {
-                    internetConnected = false;
+                    state.internetConnected = false;
                 }
-                updateUI();
+                renderUI();
             }
 
             function startAudio() {
@@ -658,7 +708,8 @@
                 oscillator.connect(gainNode);
                 gainNode.connect(audioContext.destination);
                 oscillator.start();
-                setAudioStatus(true);
+                state.audioPlaying = true;
+                renderUI();
             }
 
             function stopAudio() {
@@ -667,11 +718,12 @@
                     oscillator.disconnect();
                     oscillator = null;
                 }
-                setAudioStatus(false);
+                state.audioPlaying = false;
+                renderUI();
             }
 
             function toggleAudio() {
-                if (audioConnected) {
+                if (state.audioPlaying) {
                     stopAudio();
                 } else {
                     startAudio();
@@ -680,33 +732,42 @@
             }
 
             function updateLocation(position) {
-                const { latitude, longitude } = position.coords;
-                gpsCoords.textContent = `${latitude.toFixed(4)}° N, ${Math.abs(longitude).toFixed(4)}° O`;
-                satCount.textContent = `${Math.max(4, Math.min(24, Math.round(position.coords.accuracy / 10)))}`;
-                updateUI(); // Llamar a updateUI para que actualice songArtist si el audio no está activo
+                const { latitude, longitude, accuracy } = position.coords;
+                state.gps.latitude = latitude.toFixed(4);
+                state.gps.longitude = Math.abs(longitude).toFixed(4);
+                // Estimate satellites from accuracy, clamp between 4 and 24
+                state.gps.satellites = `${Math.max(4, Math.min(24, Math.round(accuracy / 10)))}`;
+                state.gps.permissionDenied = false;
+                state.gps.notAvailable = false;
+                state.geolocationActive = true;
+                renderUI();
+            }
+
+            function handleLocationError(error) {
+                state.geolocationActive = false;
+                if (error.code === error.PERMISSION_DENIED) {
+                    state.gps.permissionDenied = true;
+                    state.gps.notAvailable = false;
+                } else {
+                    state.gps.permissionDenied = false;
+                    state.gps.notAvailable = true;
+                }
+                renderUI();
             }
 
             function requestLocation() {
                 if (!navigator.geolocation) {
-                    gpsCoords.textContent = 'Geolocalización no disponible';
-                    satCount.textContent = '0';
+                    state.gps.notAvailable = true;
+                    renderUI();
                     return;
                 }
 
-                // Intentar obtener la posición actual una vez
-                navigator.geolocation.getCurrentPosition(
-                    updateLocation,
-                    () => {
-                        gpsCoords.textContent = 'Permiso de GPS denegado';
-                        satCount.textContent = '0';
-                        updateUI(); // Actualizar el UI en caso de error/denegación
-                    },
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
-                );
+                // Try to get current position once (might be faster for initial display)
+                navigator.geolocation.getCurrentPosition(updateLocation, handleLocationError, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
 
-                // Si no se está observando ya la posición, empezar a hacerlo
+                // If not already watching, start watching
                 if (geolocationWatchId === null) {
-                    geolocationWatchId = navigator.geolocation.watchPosition(updateLocation, () => {}, {
+                    geolocationWatchId = navigator.geolocation.watchPosition(updateLocation, handleLocationError, {
                         enableHighAccuracy: true,
                         timeout: 10000,
                         maximumAge: 30000
@@ -714,6 +775,7 @@
                 }
             }
 
+            // Event Listeners
             internetBtn.addEventListener('click', async function(e) {
                 e.stopPropagation();
                 await checkInternet();
@@ -735,16 +797,17 @@
             });
 
             document.querySelector('.nav-actions i.fa-route').addEventListener('click', function() {
-                currentDestinationIndex = (currentDestinationIndex + 1) % destinos.length;
-                navDestinoText.textContent = destinos[currentDestinationIndex];
+                state.currentDestinationIndex = (state.currentDestinationIndex + 1) % destinos.length;
+                renderUI();
                 vibrate(6);
             });
 
             document.querySelector('.nav-actions i.fa-microphone').addEventListener('click', function() {
+                vibrate(10);
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 if (!SpeechRecognition) {
-                    songTitle.textContent = 'Comandos de voz no disponibles';
-                    vibrate(10);
+                    songTitleElement.textContent = 'Comandos de voz no disponibles';
+                    setTimeout(() => renderUI(), 3000); // Revert after a few seconds
                     return;
                 }
 
@@ -752,61 +815,105 @@
                 recognition.lang = 'es-ES';
                 recognition.interimResults = false;
                 recognition.maxAlternatives = 1;
+
+                // Temporarily change songTitle to indicate listening
+                const originalSongTitle = songTitleElement.textContent;
+                songTitleElement.textContent = 'Escuchando...';
+
                 recognition.onresult = function(event) {
                     const text = event.results[0][0].transcript.toLowerCase();
-                    if (text.includes('trabajo')) navDestinoText.textContent = 'Trabajo · 8 min';
-                    else if (text.includes('casa')) navDestinoText.textContent = 'Home · 12 min';
-                    else if (text.includes('gimnasio')) navDestinoText.textContent = 'Gym · 5 min';
-                    else if (text.includes('super')) navDestinoText.textContent = 'Super · 4 min';
-                    else if (text.includes('cine')) navDestinoText.textContent = 'Cine · 15 min';
-                    else if (text.includes('mall')) navDestinoText.textContent = 'Mall · 9 min';
-                    else songTitle.textContent = 'Comando no reconocido';
+                    if (text.includes('trabajo')) state.currentDestinationIndex = destinos.indexOf('Trabajo · 8 min');
+                    else if (text.includes('casa')) state.currentDestinationIndex = destinos.indexOf('Home · 12 min');
+                    else if (text.includes('gimnasio')) state.currentDestinationIndex = destinos.indexOf('Gym · 5 min');
+                    else if (text.includes('super')) state.currentDestinationIndex = destinos.indexOf('Super · 4 min');
+                    else if (text.includes('cine')) state.currentDestinationIndex = destinos.indexOf('Cine · 15 min');
+                    else if (text.includes('mall')) state.currentDestinationIndex = destinos.indexOf('Mall · 9 min');
+                    else {
+                        songTitleElement.textContent = 'Comando no reconocido';
+                        setTimeout(() => renderUI(), 3000); // Revert after 3 seconds
+                    }
+                    renderUI(); // Update destination if recognized
                     vibrate(10);
                 };
                 recognition.onerror = function() {
-                    songTitle.textContent = 'No se pudo usar el micrófono';
+                    songTitleElement.textContent = 'No se pudo usar el micrófono';
+                    setTimeout(() => renderUI(), 3000); // Revert after 3 seconds
                     vibrate(10);
+                };
+                recognition.onend = function() {
+                    // If no result or error, and songTitle is still 'Escuchando...', revert it
+                    if (songTitleElement.textContent === 'Escuchando...') {
+                         songTitleElement.textContent = originalSongTitle;
+                         renderUI(); // Render again to ensure state is reflected
+                    }
                 };
                 recognition.start();
             });
 
-            document.querySelectorAll('.app-item').forEach(el => {
-                el.addEventListener('click', function() {
-                    const label = this.getAttribute('aria-label') || this.innerText.trim();
+
+            // New event listeners for control-button elements in the left bar
+            document.querySelectorAll('.left-control-bar .control-button').forEach(button => {
+                button.addEventListener('click', function() {
                     vibrate(10);
+                    // Deactivate all control buttons first
+                    document.querySelectorAll('.left-control-bar .control-button').forEach(btn => btn.classList.remove('active'));
+                    // Activate the clicked button
+                    this.classList.add('active');
 
-                    if (!internetConnected) {
-                        songTitle.textContent = `Sin conexión para ${label}`;
-                        return;
+                    const label = this.getAttribute('aria-label');
+                    let newSongTitle = '';
+                    switch(label) {
+                        case 'Inicio':
+                            newSongTitle = 'Volviendo a inicio';
+                            // If different views were implemented, this would switch to home view
+                            break;
+                        case 'Spotify música':
+                            if (!state.internetConnected) {
+                                newSongTitle = `Sin conexión para Spotify`;
+                                break;
+                            }
+                            window.open(appTargets['Spotify música'], '_blank', 'noopener');
+                            newSongTitle = 'Abriendo Spotify';
+                            break;
+                        case 'Google Maps':
+                            if (!state.internetConnected) { // Allow Maps to open even offline.
+                                newSongTitle = `Sin conexión para Maps`;
+                                break;
+                            }
+                            window.open(appTargets['Google Maps'], '_blank', 'noopener');
+                            newSongTitle = `Abriendo Maps`;
+                            break;
+                        case 'Llamada':
+                            newSongTitle = 'Abriendo contactos';
+                            // Placeholder for phone/contact functionality
+                            break;
+                        case 'Ajustes':
+                            newSongTitle = 'Abriendo ajustes';
+                            // Placeholder for settings functionality
+                            break;
+                        default:
+                            newSongTitle = `Acción ${label} no implementada`;
                     }
-
-                    const targets = {
-                        'GPS Satelital': 'https://www.google.com/maps',
-                        'Spotify música': 'https://open.spotify.com',
-                        'Google Maps': 'https://www.google.com/maps',
-                        'Waze navegación': 'https://www.waze.com'
-                    };
-
-                    const target = targets[label];
-                    if (target) {
-                        window.open(target, '_blank', 'noopener');
-                        songTitle.textContent = `Abriendo ${label}`;
-                    }
+                    songTitleElement.textContent = newSongTitle;
+                    setTimeout(() => renderUI(), 3000); // Revert after 3 seconds
                 });
             });
 
+
+            // Initial Setup and Event Listeners for network status
             window.addEventListener('online', () => {
-                internetConnected = true;
-                updateUI();
+                state.internetConnected = true;
+                renderUI();
             });
             window.addEventListener('offline', () => {
-                internetConnected = false;
-                updateUI();
+                state.internetConnected = false;
+                renderUI();
             });
 
-            updateUI();
-            requestLocation();
-            checkInternet();
+            // Initialize UI and check states
+            renderUI();
+            checkInternet(); // Initial check
+            requestLocation(); // Start GPS updates
         })();
     </script>
 </body>

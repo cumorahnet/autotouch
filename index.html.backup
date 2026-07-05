@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>AutoTouch · Modo Horizontal</title>
     <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -549,58 +549,65 @@
 
     <script>
         (function() {
+            // DOM Elements (cached for performance)
             const internetBtn = document.getElementById('internetBtn');
             const audioBtn = document.getElementById('audioBtn');
             const connInternet = document.getElementById('connInternet');
             const connAudio = document.getElementById('connAudio');
             const playPauseBtn = document.getElementById('playPauseBtn');
-            const songTitle = document.getElementById('songTitle');
-            const songArtist = document.getElementById('songArtist');
+            const songTitleElement = document.getElementById('songTitle'); // Renamed to avoid clash
+            const songArtistElement = document.getElementById('songArtist'); // Renamed to avoid clash
             const navDestinoText = document.getElementById('navDestinoText');
-            const gpsCoords = document.getElementById('gpsCoords');
-            const satCount = document.getElementById('satCount');
+            const gpsCoordsElement = document.getElementById('gpsCoords'); // Renamed
+            const satCountElement = document.getElementById('satCount'); // Renamed
             const gpsBadge = document.getElementById('gpsBadge');
             const connCount = document.getElementById('connCount');
+            const footerHomeBtn = document.querySelector('.footer-actions .fa-home');
+            const footerCompassBtn = document.querySelector('.footer-actions .fa-compass');
+            const footerSettingsBtn = document.querySelector('.footer-actions .fa-cog');
+            const footerPhoneBtn = document.querySelector('.footer-actions .fa-phone');
 
-            let internetConnected = navigator.onLine;
-            let audioConnected = false;
+
+            // Application State
+            const state = {
+                internetConnected: navigator.onLine,
+                audioPlaying: false, // Represents if actual audio is being generated
+                geolocationActive: false, // True if watchPosition is active and successfully updating
+                currentDestinationIndex: 0,
+                currentSong: {
+                    title: 'Bluetooth Stream',
+                    artist: 'Desde el auto'
+                },
+                gps: {
+                    latitude: 'N/A',
+                    longitude: 'N/A',
+                    satellites: '0',
+                    permissionDenied: false,
+                    notAvailable: false
+                }
+            };
+
+            // Constants
             let audioContext = null;
             let oscillator = null;
             let geolocationWatchId = null;
-            let currentDestinationIndex = 0;
             const destinos = ['Home · 12 min', 'Trabajo · 8 min', 'Gym · 5 min', 'Super · 4 min', 'Cine · 15 min', 'Mall · 9 min'];
+            const appTargets = {
+                'GPS Satelital': 'https://www.google.com/maps',
+                'Spotify música': 'https://open.spotify.com',
+                'Google Maps': 'https://www.google.com/maps',
+                'Waze navegación': 'https://www.waze.com'
+            };
 
+            // Utility Functions
             function vibrate(duration = 8) {
                 if (navigator.vibrate) navigator.vibrate(duration);
             }
 
-            function setAudioStatus(active) {
-                audioConnected = active;
-                if (active) {
-                    connAudio.classList.add('audio-on');
-                    connAudio.querySelector('.status-dot').className = 'status-dot streaming';
-                    connAudio.querySelector('.conn-status span:last-child').textContent = 'Reproduciendo';
-                    audioBtn.textContent = 'Detener';
-                    audioBtn.classList.add('active');
-                    playPauseBtn.classList.remove('fa-play-circle');
-                    playPauseBtn.classList.add('fa-pause-circle');
-                    songTitle.textContent = 'Bluetooth · ▶';
-                    songArtist.textContent = 'Audio real generado por el navegador';
-                } else {
-                    connAudio.classList.remove('audio-on');
-                    connAudio.querySelector('.status-dot').className = 'status-dot offline';
-                    connAudio.querySelector('.conn-status span:last-child').textContent = 'Detenido';
-                    audioBtn.textContent = 'Reproducir';
-                    audioBtn.classList.remove('active');
-                    playPauseBtn.classList.remove('fa-pause-circle');
-                    playPauseBtn.classList.add('fa-play-circle');
-                    songTitle.textContent = 'Bluetooth Stream';
-                    songArtist.textContent = internetConnected ? 'Desde el auto' : 'Sin conexión real';
-                }
-            }
-
-            function updateUI() {
-                if (internetConnected) {
+            // UI Rendering Function
+            function renderUI() {
+                // Internet Connection
+                if (state.internetConnected) {
                     connInternet.classList.add('internet-on');
                     connInternet.querySelector('.status-dot').className = 'status-dot online';
                     connInternet.querySelector('.conn-status span:last-child').textContent = 'En línea';
@@ -614,30 +621,65 @@
                     internetBtn.classList.remove('active');
                 }
 
-                const active = (internetConnected ? 1 : 0) + (audioConnected ? 1 : 0);
-                connCount.textContent = `${active} de 2`;
-
-                if (!internetConnected) {
-                    gpsCoords.textContent = 'Esperando señal GPS';
-                    satCount.textContent = '0';
-                    if (!audioConnected) {
-                        songArtist.textContent = 'Sin conexión real · audio detenido';
+                // Audio Connection (music player state)
+                if (state.audioPlaying) {
+                    connAudio.classList.add('audio-on');
+                    connAudio.querySelector('.status-dot').className = 'status-dot streaming';
+                    connAudio.querySelector('.conn-status span:last-child').textContent = 'Reproduciendo';
+                    audioBtn.textContent = 'Detener';
+                    audioBtn.classList.add('active');
+                    playPauseBtn.classList.remove('fa-play-circle');
+                    playPauseBtn.classList.add('fa-pause-circle');
+                    songTitleElement.textContent = 'Bluetooth · ▶';
+                    songArtistElement.textContent = 'Audio real generado por el navegador';
+                } else {
+                    connAudio.classList.remove('audio-on');
+                    connAudio.querySelector('.status-dot').className = 'status-dot offline';
+                    connAudio.querySelector('.conn-status span:last-child').textContent = 'Detenido';
+                    audioBtn.textContent = 'Reproducir';
+                    audioBtn.classList.remove('active');
+                    playPauseBtn.classList.remove('fa-pause-circle');
+                    playPauseBtn.classList.add('fa-play-circle');
+                    songTitleElement.textContent = state.currentSong.title; // Revert to default or last known
+                    // Dynamic songArtist based on other statuses when audio is not playing
+                    if (state.geolocationActive && !state.gps.permissionDenied && !state.gps.notAvailable) {
+                        songArtistElement.textContent = state.internetConnected ? 'GPS activo · ubicación real' : 'GPS activo · sin conexión';
+                    } else if (state.internetConnected) {
+                        songArtistElement.textContent = 'Desde el auto';
+                    } else {
+                        songArtistElement.textContent = 'Sin conexión real · audio detenido';
                     }
-                } else if (!audioConnected) {
-                    gpsCoords.textContent = '19.4326° N, 99.1332° O';
-                    satCount.textContent = '14';
-                    songArtist.textContent = 'Desde el auto';
+                }
+
+                // Connection Count
+                const activeConnections = (state.internetConnected ? 1 : 0) + (state.audioPlaying ? 1 : 0);
+                connCount.textContent = `${activeConnections} de 2`;
+
+                // Navigation Destination
+                navDestinoText.textContent = destinos[state.currentDestinationIndex];
+
+                // GPS Status
+                if (state.gps.permissionDenied) {
+                    gpsCoordsElement.textContent = 'Permiso de GPS denegado';
+                    satCountElement.textContent = '0';
+                } else if (state.gps.notAvailable) {
+                    gpsCoordsElement.textContent = 'Geolocalización no disponible';
+                    satCountElement.textContent = '0';
+                } else {
+                    gpsCoordsElement.textContent = `${state.gps.latitude}° N, ${state.gps.longitude}° O`;
+                    satCountElement.textContent = state.gps.satellites;
                 }
             }
 
+            // Core Logic Functions
             async function checkInternet() {
                 try {
                     await fetch('https://www.google.com', { method: 'HEAD', mode: 'no-cors' });
-                    internetConnected = true;
+                    state.internetConnected = true;
                 } catch (error) {
-                    internetConnected = false;
+                    state.internetConnected = false;
                 }
-                updateUI();
+                renderUI();
             }
 
             function startAudio() {
@@ -656,7 +698,8 @@
                 oscillator.connect(gainNode);
                 gainNode.connect(audioContext.destination);
                 oscillator.start();
-                setAudioStatus(true);
+                state.audioPlaying = true;
+                renderUI();
             }
 
             function stopAudio() {
@@ -665,11 +708,12 @@
                     oscillator.disconnect();
                     oscillator = null;
                 }
-                setAudioStatus(false);
+                state.audioPlaying = false;
+                renderUI();
             }
 
             function toggleAudio() {
-                if (audioConnected) {
+                if (state.audioPlaying) {
                     stopAudio();
                 } else {
                     startAudio();
@@ -678,30 +722,42 @@
             }
 
             function updateLocation(position) {
-                const { latitude, longitude } = position.coords;
-                gpsCoords.textContent = `${latitude.toFixed(4)}° N, ${Math.abs(longitude).toFixed(4)}° O`;
-                satCount.textContent = `${Math.max(4, Math.min(24, Math.round(position.coords.accuracy / 10)))}`;
-                songArtist.textContent = internetConnected ? 'GPS activo · ubicación real' : 'GPS activo · sin conexión';
+                const { latitude, longitude, accuracy } = position.coords;
+                state.gps.latitude = latitude.toFixed(4);
+                state.gps.longitude = Math.abs(longitude).toFixed(4);
+                // Estimate satellites from accuracy, clamp between 4 and 24
+                state.gps.satellites = `${Math.max(4, Math.min(24, Math.round(accuracy / 10)))}`;
+                state.gps.permissionDenied = false;
+                state.gps.notAvailable = false;
+                state.geolocationActive = true;
+                renderUI();
+            }
+
+            function handleLocationError(error) {
+                state.geolocationActive = false;
+                if (error.code === error.PERMISSION_DENIED) {
+                    state.gps.permissionDenied = true;
+                    state.gps.notAvailable = false;
+                } else {
+                    state.gps.permissionDenied = false;
+                    state.gps.notAvailable = true;
+                }
+                renderUI();
             }
 
             function requestLocation() {
                 if (!navigator.geolocation) {
-                    gpsCoords.textContent = 'Geolocalización no disponible';
-                    satCount.textContent = '0';
+                    state.gps.notAvailable = true;
+                    renderUI();
                     return;
                 }
 
-                navigator.geolocation.getCurrentPosition(
-                    updateLocation,
-                    () => {
-                        gpsCoords.textContent = 'Permiso de GPS denegado';
-                        satCount.textContent = '0';
-                    },
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
-                );
+                // Try to get current position once (might be faster for initial display)
+                navigator.geolocation.getCurrentPosition(updateLocation, handleLocationError, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
 
+                // If not already watching, start watching
                 if (geolocationWatchId === null) {
-                    geolocationWatchId = navigator.geolocation.watchPosition(updateLocation, () => {}, {
+                    geolocationWatchId = navigator.geolocation.watchPosition(updateLocation, handleLocationError, {
                         enableHighAccuracy: true,
                         timeout: 10000,
                         maximumAge: 30000
@@ -709,6 +765,7 @@
                 }
             }
 
+            // Event Listeners
             internetBtn.addEventListener('click', async function(e) {
                 e.stopPropagation();
                 await checkInternet();
@@ -730,15 +787,17 @@
             });
 
             document.querySelector('.nav-actions i.fa-route').addEventListener('click', function() {
-                currentDestinationIndex = (currentDestinationIndex + 1) % destinos.length;
-                navDestinoText.textContent = destinos[currentDestinationIndex];
+                state.currentDestinationIndex = (state.currentDestinationIndex + 1) % destinos.length;
+                renderUI();
                 vibrate(6);
             });
 
             document.querySelector('.nav-actions i.fa-microphone').addEventListener('click', function() {
+                vibrate(10);
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 if (!SpeechRecognition) {
-                    songTitle.textContent = 'Comandos de voz no disponibles';
+                    songTitleElement.textContent = 'Comandos de voz no disponibles';
+                    setTimeout(() => renderUI(), 3000); // Revert after a few seconds
                     return;
                 }
 
@@ -746,61 +805,83 @@
                 recognition.lang = 'es-ES';
                 recognition.interimResults = false;
                 recognition.maxAlternatives = 1;
+
+                // Temporarily change songTitle to indicate listening
+                const originalSongTitle = songTitleElement.textContent;
+                songTitleElement.textContent = 'Escuchando...';
+
                 recognition.onresult = function(event) {
                     const text = event.results[0][0].transcript.toLowerCase();
-                    if (text.includes('trabajo')) navDestinoText.textContent = 'Trabajo · 8 min';
-                    else if (text.includes('casa')) navDestinoText.textContent = 'Home · 12 min';
-                    else if (text.includes('gimnasio')) navDestinoText.textContent = 'Gym · 5 min';
-                    else if (text.includes('super')) navDestinoText.textContent = 'Super · 4 min';
-                    else if (text.includes('cine')) navDestinoText.textContent = 'Cine · 15 min';
-                    else if (text.includes('mall')) navDestinoText.textContent = 'Mall · 9 min';
-                    else songTitle.textContent = 'Comando no reconocido';
+                    if (text.includes('trabajo')) state.currentDestinationIndex = destinos.indexOf('Trabajo · 8 min');
+                    else if (text.includes('casa')) state.currentDestinationIndex = destinos.indexOf('Home · 12 min');
+                    else if (text.includes('gimnasio')) state.currentDestinationIndex = destinos.indexOf('Gym · 5 min');
+                    else if (text.includes('super')) state.currentDestinationIndex = destinos.indexOf('Super · 4 min');
+                    else if (text.includes('cine')) state.currentDestinationIndex = destinos.indexOf('Cine · 15 min');
+                    else if (text.includes('mall')) state.currentDestinationIndex = destinos.indexOf('Mall · 9 min');
+                    else {
+                        songTitleElement.textContent = 'Comando no reconocido';
+                        setTimeout(() => renderUI(), 3000); // Revert after 3 seconds
+                    }
+                    renderUI(); // Update destination if recognized
                     vibrate(10);
                 };
                 recognition.onerror = function() {
-                    songTitle.textContent = 'No se pudo usar el micrófono';
+                    songTitleElement.textContent = 'No se pudo usar el micrófono';
+                    setTimeout(() => renderUI(), 3000); // Revert after 3 seconds
+                    vibrate(10);
+                };
+                recognition.onend = function() {
+                    // If no result or error, and songTitle is still 'Escuchando...', revert it
+                    if (songTitleElement.textContent === 'Escuchando...') {
+                         songTitleElement.textContent = originalSongTitle;
+                         renderUI(); // Render again to ensure state is reflected
+                    }
                 };
                 recognition.start();
             });
 
+
             document.querySelectorAll('.app-item').forEach(el => {
                 el.addEventListener('click', function() {
-                    const label = this.getAttribute('aria-label') || this.innerText.trim();
                     vibrate(10);
+                    const label = this.getAttribute('aria-label') || this.querySelector('span').textContent.trim();
 
-                    if (!internetConnected) {
-                        songTitle.textContent = `Sin conexión para ${label}`;
+                    if (!state.internetConnected && label !== 'GPS Satelital') { // Allow GPS Satelital (Google Maps) even offline, but warn. Maybe GPS is cached.
+                        songTitleElement.textContent = `Sin conexión para ${label}`;
+                        setTimeout(() => renderUI(), 3000); // Revert after 3 seconds
                         return;
                     }
 
-                    const targets = {
-                        'GPS Satelital': 'https://www.google.com/maps',
-                        'Spotify música': 'https://open.spotify.com',
-                        'Google Maps': 'https://www.google.com/maps',
-                        'Waze navegación': 'https://www.waze.com'
-                    };
-
-                    const target = targets[label];
+                    const target = appTargets[label];
                     if (target) {
                         window.open(target, '_blank', 'noopener');
-                        songTitle.textContent = `Abriendo ${label}`;
+                        songTitleElement.textContent = `Abriendo ${label}`;
+                        setTimeout(() => renderUI(), 3000); // Revert after 3 seconds
                     }
                 });
             });
 
+            // Footer button actions
+            footerHomeBtn.addEventListener('click', () => { vibrate(8); songTitleElement.textContent = 'Volviendo a inicio'; setTimeout(() => renderUI(), 3000); });
+            footerCompassBtn.addEventListener('click', () => { vibrate(8); songTitleElement.textContent = 'Mostrando brújula'; setTimeout(() => renderUI(), 3000); });
+            footerSettingsBtn.addEventListener('click', () => { vibrate(8); songTitleElement.textContent = 'Abriendo ajustes'; setTimeout(() => renderUI(), 3000); });
+            footerPhoneBtn.addEventListener('click', () => { vibrate(8); songTitleElement.textContent = 'Abriendo contactos'; setTimeout(() => renderUI(), 3000); });
+
+
+            // Initial Setup and Event Listeners for network status
             window.addEventListener('online', () => {
-                internetConnected = true;
-                updateUI();
+                state.internetConnected = true;
+                renderUI();
             });
             window.addEventListener('offline', () => {
-                internetConnected = false;
-                updateUI();
+                state.internetConnected = false;
+                renderUI();
             });
 
-            updateUI();
-            requestLocation();
-            checkInternet();
-            console.log('[Auto] Sistema real activado');
+            // Initialize UI and check states
+            renderUI();
+            checkInternet(); // Initial check
+            requestLocation(); // Start GPS updates
         })();
     </script>
 </body>
