@@ -102,25 +102,27 @@
         /* Layout principal en grid horizontal */
         .main-grid {
             display: grid;
-            grid-template-columns: 1fr 1.2fr;
+            grid-template-columns: minmax(140px, 0.25fr) 1fr; /* Columna izquierda para menú (mín 140px, máx 25%), el resto para la app */
             gap: 14px;
             flex: 1;
             min-height: 0;
             margin-top: 10px;
+            overflow: hidden; /* Evita scroll indeseado en el grid si las columnas tienen overflow */
         }
 
-        /* Columna izquierda */
+        /* Columna izquierda (Menú de selección) */
         .left-col {
             display: flex;
             flex-direction: column;
             gap: 10px;
             min-height: 0;
+            overflow-y: auto; /* Permite scroll si el contenido del menú excede la altura */
         }
 
         /* Grid de apps (más compacto en horizontal) */
         .app-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(2, 1fr); /* 2 columnas para el menú lateral */
             gap: 10px 8px;
             flex-shrink: 0;
         }
@@ -239,12 +241,13 @@
             color: #7cf0b0;
         }
 
-        /* Columna derecha */
+        /* Columna derecha (Área de la aplicación) */
         .right-col {
             display: flex;
             flex-direction: column;
             gap: 10px;
             min-height: 0;
+            overflow-y: auto; /* Permite scroll si el contenido de la app excede la altura */
         }
 
         /* Reproductor */
@@ -357,10 +360,6 @@
 
         /* Responsive para pantallas más pequeñas en horizontal */
         @media (max-width: 700px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
             .dashboard {
                 max-height: none;
                 height: 100vh;
@@ -368,15 +367,13 @@
                 border-radius: 0;
                 padding: 12px 14px 16px;
             }
-            .app-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
+            /* .app-grid ya no necesita ser redefinido aquí a 4 columnas */
             .app-item i { font-size: 22px; }
             .app-item span { font-size: 10px; }
         }
 
         @media (max-width: 500px) {
-            .app-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+            /* .app-grid ya no necesita ser redefinido aquí a 4 columnas */
             .app-item { padding: 8px 4px 6px; }
             .app-item i { font-size: 18px; }
             .app-item span { font-size: 9px; }

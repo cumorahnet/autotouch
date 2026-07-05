@@ -65,7 +65,7 @@
             display: flex;
             flex-direction: column;
             transition: all 0.2s;
-            overflow-y: auto;
+            /* overflow-y: auto; -- Removed to allow main-grid to handle scroll within its columns */
         }
 
         /* Scroll personalizado */
@@ -102,32 +102,35 @@
         /* Layout principal en grid horizontal */
         .main-grid {
             display: grid;
-            grid-template-columns: 1fr 1.2fr;
+            grid-template-columns: minmax(140px, 0.25fr) 1fr; /* Columna izquierda para menú (mín 140px, máx 25%), el resto para la app */
             gap: 14px;
-            flex: 1;
+            flex: 1; /* Permite que el grid ocupe el espacio restante */
             min-height: 0;
             margin-top: 10px;
+            overflow: hidden; /* Evita scroll indeseado en el grid si las columnas tienen overflow */
         }
 
-        /* Columna izquierda */
+        /* Columna izquierda (Menú de selección) */
         .left-col {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px; /* Aumentado el espacio entre secciones */
             min-height: 0;
+            overflow-y: auto; /* Permite scroll si el contenido del menú excede la altura */
+            border-right: 1px solid #28303d; /* Separador visual */
+            padding-right: 14px; /* Espacio antes del separador */
         }
 
-        /* Grid de apps (más compacto en horizontal) */
+        /* Grid de apps (ahora como menú de selección vertical) */
         .app-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px 8px;
+            grid-template-columns: 1fr; /* Se cambió a una sola columna para el menú */
+            gap: 10px; /* Espacio vertical entre los elementos del menú */
             flex-shrink: 0;
         }
         .app-item {
             background: #1e2836;
             border-radius: 16px;
-            padding: 10px 4px 8px;
+            padding: 12px 10px 10px; /* Ajustado el padding para el look de menú */
             text-align: center;
             color: #d6e3f5;
             transition: all 0.15s ease;
@@ -141,8 +144,8 @@
             background: #2b3850;
             border-color: #4d6a8f;
         }
-        .app-item i { font-size: 24px; margin-bottom: 4px; display: block; color: #9bb9e6; }
-        .app-item span { font-size: 11px; font-weight: 500; display: block; letter-spacing: 0.2px; }
+        .app-item i { font-size: 28px; margin-bottom: 6px; display: block; color: #9bb9e6; } /* Íconos ligeramente más grandes */
+        .app-item span { font-size: 13px; font-weight: 500; display: block; letter-spacing: 0.3px; } /* Texto ligeramente más grande */
         .app-item .fab.fa-spotify { color: #1ed760; }
         .app-item .fas.fa-map-marked-alt { color: #fbbc04; }
         .app-item .fas.fa-waze { color: #33ccff; }
@@ -239,12 +242,14 @@
             color: #7cf0b0;
         }
 
-        /* Columna derecha */
+        /* Columna derecha (Área de la aplicación) */
         .right-col {
             display: flex;
             flex-direction: column;
             gap: 10px;
             min-height: 0;
+            overflow-y: auto; /* Permite scroll si el contenido de la app excede la altura */
+            padding-left: 6px; /* Ajuste para compensar el padding de left-col */
         }
 
         /* Reproductor */
@@ -340,7 +345,7 @@
             border-top: 1px solid #25303e;
             padding-top: 12px;
             flex-shrink: 0;
-            margin-top: 4px;
+            margin-top: 10px; /* Aumentado el margen superior */
         }
         .footer-actions i { cursor: pointer; transition: 0.1s; padding: 4px 10px; border-radius: 25px; touch-action: manipulation; }
         .footer-actions i:active { background: #253240; color: #d6e6ff; }
@@ -357,10 +362,6 @@
 
         /* Responsive para pantallas más pequeñas en horizontal */
         @media (max-width: 700px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
             .dashboard {
                 max-height: none;
                 height: 100vh;
@@ -368,18 +369,14 @@
                 border-radius: 0;
                 padding: 12px 14px 16px;
             }
-            .app-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-            .app-item i { font-size: 22px; }
-            .app-item span { font-size: 10px; }
+            .app-item i { font-size: 24px; } /* Ajuste de íconos */
+            .app-item span { font-size: 11px; } /* Ajuste de texto */
         }
 
         @media (max-width: 500px) {
-            .app-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
-            .app-item { padding: 8px 4px 6px; }
-            .app-item i { font-size: 18px; }
-            .app-item span { font-size: 9px; }
+            .app-item { padding: 10px 8px 8px; } /* Más compacto */
+            .app-item i { font-size: 20px; }
+            .app-item span { font-size: 10px; }
             .conn-item .conn-info { font-size: 11px; }
             .music-info .title { font-size: 12px; }
             .music-info .artist { font-size: 10px; }
@@ -390,17 +387,18 @@
         @media (max-height: 450px) {
             .dashboard { padding: 8px 12px 12px; }
             .status-bar { padding-bottom: 6px; font-size: 11px; }
-            .app-grid { gap: 4px; }
-            .app-item { padding: 6px 4px 4px; }
-            .app-item i { font-size: 16px; margin-bottom: 2px; }
-            .app-item span { font-size: 8px; }
-            .connections-panel { padding: 6px 10px; }
-            .conn-item { padding: 4px 8px; }
-            .music-card { padding: 8px 12px; }
-            .music-cover { width: 36px; height: 36px; font-size: 16px; }
-            .nav-panel { padding: 8px 12px; }
-            .gps-row { padding: 4px 12px; }
-            .footer-actions { padding-top: 6px; font-size: 14px; }
+            .left-col { gap: 8px; padding-right: 10px; }
+            .app-grid { gap: 6px; }
+            .app-item { padding: 8px 6px 6px; border-radius: 12px; }
+            .app-item i { font-size: 18px; margin-bottom: 4px; }
+            .app-item span { font-size: 9px; }
+            .connections-panel { padding: 6px 10px; border-radius: 16px; }
+            .conn-item { padding: 4px 8px; border-radius: 10px; }
+            .music-card { padding: 8px 12px; border-radius: 16px; }
+            .music-cover { width: 36px; height: 36px; font-size: 16px; border-radius: 10px; }
+            .nav-panel { padding: 8px 12px; border-radius: 16px; }
+            .gps-row { padding: 4px 12px; border-radius: 25px; }
+            .footer-actions { padding-top: 8px; font-size: 14px; margin-top: 6px; }
             .touch-hint { display: none; }
         }
     </style>
@@ -423,7 +421,7 @@
 
         <!-- Grid principal: izquierda (apps + conexiones) y derecha (reproductor + navegación) -->
         <div class="main-grid">
-            <!-- Columna izquierda -->
+            <!-- Columna izquierda: Menú de selección -->
             <div class="left-col">
                 <!-- Apps -->
                 <div class="app-grid">
@@ -490,7 +488,7 @@
                 </div>
             </div>
 
-            <!-- Columna derecha -->
+            <!-- Columna derecha: Muestra la acción actual (o vista de tablero) -->
             <div class="right-col">
                 <!-- Reproductor -->
                 <div class="music-card">
@@ -531,15 +529,15 @@
                         <i class="fas fa-circle" style="color: #4caf50; font-size: 8px;"></i> <span id="satCount">14</span> sat
                     </div>
                 </div>
-
-                <!-- Footer -->
-                <div class="footer-actions">
-                    <i class="fas fa-home" aria-label="Inicio"></i>
-                    <i class="fas fa-compass" aria-label="Brújula"></i>
-                    <i class="fas fa-cog" aria-label="Ajustes"></i>
-                    <i class="fas fa-phone" aria-label="Llamada"></i>
-                </div>
             </div>
+        </div>
+
+        <!-- Footer global de acciones -->
+        <div class="footer-actions">
+            <i class="fas fa-home" aria-label="Inicio"></i>
+            <i class="fas fa-compass" aria-label="Brújula"></i>
+            <i class="fas fa-cog" aria-label="Ajustes"></i>
+            <i class="fas fa-phone" aria-label="Llamada"></i>
         </div>
 
         <div class="touch-hint">
